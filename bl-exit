@@ -56,7 +56,7 @@ if display:
             gtk.Window.__init__(self)
             self.set_title("Log out " + getpass.getuser() + "? Choose an option:")
             self.set_border_width(5)
-            # self.set_size_request(500, 80)
+            self.set_size_request(500, 60)
             self.set_resizable(False)
             self.set_keep_above(True)
             self.stick
@@ -80,12 +80,13 @@ if display:
             config_dirs.append('/etc')
             config_file = None
             for config_dir in config_dirs:
-                config_dir = config_dir + '/bl-exit'
-                if os.path.isdir(config_dir):
-                    maybe_config_file = config_dir + '/bl-exitrc'
-                    if os.path.isfile(maybe_config_file):
-                        config_file = maybe_config_file
-                        break
+                if config_dir:
+                    config_dir = config_dir + '/bl-exit'
+                    if os.path.isdir(config_dir):
+                        maybe_config_file = config_dir + '/bl-exitrc'
+                        if os.path.isfile(maybe_config_file):
+                            config_file = maybe_config_file
+                            break
             if config_file:
                 self.config = ConfigParser.RawConfigParser()
                 self.config.read(config_file)
@@ -140,37 +141,37 @@ if display:
                 # Defaults. 
                 show = show_values[per_button_defaults[action]]
                 onError = onerror_values['novisual']
-                for section in [ 'default', action ]:
-                    try:
-                        if self.config:
+                if self.config:
+                    for section in [ 'default', action ]:
+                        try:
                             getshow = self.config.get(section, 'show')
                             if getshow in show_values:
                                 show = show_values[getshow]
-                        if show == 2:
-                            candoit = can_do_action(actionToMethod[action])
-                            if not candoit == 'yes':
-                                show = 3
-                        else:
+                                if show == 2:
+                                    candoit = can_do_action(actionToMethod[action])
+                                    if not candoit == 'yes':
+                                        show = 3
+                            else:
+                                pass
+                        except ConfigParser.NoSectionError as e:
                             pass
-                    except ConfigParser.NoSectionError as e:
+                        except ConfigParser.NoOptionError as e:
+                            pass
+                        except subprocess.CalledProcessError as e:
+                            print ("{}: {}".format(__me__, str(e)), file = sys.stderr)
                         pass
-                    except ConfigParser.NoOptionError as e:
-                        pass
-                    except subprocess.CalledProcessError as e:
-                        print ("{}: {}".format(__me__, str(e)), file = sys.stderr)
-                    pass
 
                     try:
-                        if self.config:
-                            getonerror = self.config.get(section, 'onerror')
-                            if getonerror in onerror_values:
-                                onError = onerror_values[getonerror]
+                        getonerror = self.config.get(section, 'onerror')
+                        if getonerror in onerror_values:
+                            onError = onerror_values[getonerror]
                     except ConfigParser.NoSectionError as e:
                         pass
                     except ConfigParser.NoOptionError as e:
                         pass
 
-                self._bva.append(tuple([action, label, actionfunction, actionToMethod[action], show, onError]))
+                self._bva.append(tuple([action, label, actionfunction, actionToMethod[action],
+                                        show, onError]))
                     
         def main(self):
             gtk.main()
@@ -254,7 +255,7 @@ if display:
                 else:
                     do_action(action)
             except (subprocess.CalledProcessError, CanDoItError, KeyError) as e:
-                self._on_error(e)
+                self._on_error(str(e))
             finally:
                 gtk.main_quit()
 
