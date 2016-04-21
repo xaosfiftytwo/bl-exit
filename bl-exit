@@ -56,7 +56,7 @@ if display:
             gtk.Window.__init__(self)
             self.set_title("Log out " + getpass.getuser() + "? Choose an option:")
             self.set_border_width(5)
-            self.set_size_request(500, 60)
+            self.set_size_request(-1, 80)
             self.set_resizable(False)
             self.set_keep_above(True)
             self.stick
@@ -159,7 +159,7 @@ if display:
                             pass
                         except subprocess.CalledProcessError as e:
                             print ("{}: {}".format(__me__, str(e)), file = sys.stderr)
-                        pass
+                            pass
 
                     try:
                         getonerror = self.config.get(section, 'onerror')
@@ -181,6 +181,7 @@ if display:
                 button = gtk.Button(stock=stock)
             else:
                 button = gtk.Button(label=label)
+            button.set_size_request(100, 40)
             if show == 3:
                 button.set_sensitive(False)
             button.set_border_width(4)
@@ -365,9 +366,11 @@ def main(argv):
     The script works both in a graphical and a non-graphical environment.
 
     In a graphical environment, the BlExitWindow instance is only shown when the script is launched
-    without arguments. With arguments the requested action should be one of the accepted arguments
-    and the action is executed without asking for confirmation - as if the script was launched from
-    the command line.
+    without arguments. The user selects the action she wants by clicking the right button. 
+
+    Hen  the script is launched In a graphical environment the requested action should be one of the 
+    accepted arguments and the action is executed without asking for confirmation - as if the script 
+    was launched from the command line.
 
     In a non-graphical environment, one of the accepted actions must be specified as an argument.
     '''
