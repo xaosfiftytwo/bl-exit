@@ -94,7 +94,7 @@ if display:
                 self.config = None
             self._bva = []
             self._construct_ui()
-            
+
         def _construct_ui(self):
             self._button_box = gtk.HBox()
             self._add_button(1, self._cancel_action, stock=gtk.STOCK_CANCEL)
@@ -138,7 +138,7 @@ if display:
                 poweroff = 'always'
             )
             for (action, label, actionfunction) in bva:
-                # Defaults. 
+                # Defaults.
                 show = show_values[per_button_defaults[action]]
                 onError = onerror_values['novisual']
                 if self.config:
@@ -172,7 +172,7 @@ if display:
 
                 self._bva.append(tuple([action, label, actionfunction, actionToMethod[action],
                                         show, onError]))
-                    
+
         def main(self):
             gtk.main()
 
@@ -200,13 +200,13 @@ if display:
                 (action, label, actionfunction, actionMethod, show, onerror) = item
                 if action == self._selected_action:
                     return onerror
-            
+
         def _on_error(self, e):
             onerror = self._get_onerror()
             if onerror == 0:
                 print ("{}: {}".format(__me__, str(e)), file = sys.stderr)
                 sys.exit(1)
-            else: 
+            else:
                 emDialog = gtk.MessageDialog(parent=None, flags=0, type=gtk.MESSAGE_INFO,
                                              buttons=gtk.BUTTONS_OK, message_format=None)
                 if emDialog:
@@ -236,7 +236,7 @@ if display:
             self._selected_action = 'hybridsleep'
             self._status.set_label("Hibernating + Sleeping, please standby...")
             self._do_action("HybridSleep")
-            
+
         def _reboot_action(self, button):
             self._disable_buttons()
             self._selected_action = 'reboot'
@@ -327,7 +327,7 @@ def print_usage(status):
            "  -b, --reboot      reboot the system",
            "  -p, --poweroff    power the system down", sep='\n', end='\n', file=sys.stderr)
     sys.exit(status)
-        
+
 def cli_processing(argv):
     if display:
         short_options = "hlsyibp"
@@ -357,7 +357,7 @@ def cli_processing(argv):
     # no arguments
     print ("Required arguments missing.", file = sys.stderr)
     sys.exit(1)
-        
+
 def graphical_processing():
     BlExitWindow().main()
 
@@ -366,10 +366,10 @@ def main(argv):
     The script works both in a graphical and a non-graphical environment.
 
     In a graphical environment, the BlExitWindow instance is only shown when the script is launched
-    without arguments. The user selects the action she wants by clicking the right button. 
+    without arguments. The user selects the action she wants by clicking the right button.
 
-    Hen  the script is launched In a graphical environment the requested action should be one of the 
-    accepted arguments and the action is executed without asking for confirmation - as if the script 
+    Hen  the script is launched In a graphical environment the requested action should be one of the
+    accepted arguments and the action is executed without asking for confirmation - as if the script
     was launched from the command line.
 
     In a non-graphical environment, one of the accepted actions must be specified as an argument.
