@@ -1,0 +1,154 @@
+#!/usr/bin/env python2.7
+# -*- coding: utf-8 -*-
+from __future__ import print_function
+
+import os
+display = False
+
+import os
+import getopt
+import getpass
+import subprocess
+import sys
+
+__me__ = 'bl-exit'
+__version__ = '2.0.0'
+
+# Default errorMessages dict
+# key = result from _can_do_action
+# value = string shown in error_message_dialog
+canDoItErrorMessages = dict(
+    no         = "Action is not allowed.",
+    na         = "Action is not available.",
+    challenge  = "Action is not authorized."
+)
+
+# Translate command-line option to method - command line only
+actionToMethod = dict(
+    logout    = 'Logout',
+    l         = 'Logout',
+    suspend   = 'Suspend',
+    s         = 'Suspend',
+    hybridsleep = 'HybridSleep',
+    y           = 'HybridSleep',
+    hibernate = 'Hibernate',
+    i         = 'Hibernate',
+    reboot    = 'Reboot',
+    b         = 'Reboot',
+    poweroff  = 'PowerOff',
+    p         = 'PowerOff'
+)
+
+# Custom exception class to test response value returned by can_do_action
+class CanDoItError(Exception):
+    pass
+
+
+def can_do_action(action):
+    # There is no 'CanLogout' method
+    if action == "Logout":
+        return "yes"
+    if action == "Hibernate":
+        canDoItErrorMessages["na"] = """{} is not available.
+Probable cause is inadequate swap space.""".format(action)
+    actionMethod = "Can{}".format(action)
+    response = send_dbus(actionMethod)
+    if response:
+        lines = response.split("\n")
+        if lines:
+            words = lines[1].split("\"")
+            if words:
+                if words[1]:
+                    print( "{} returned \"{}\".".format(actionMethod, words[1]))
+                    sys.exit(0)
+                    return words[1]
+    sys.exit(1)
+
+def do_action(action):
+    candoit = can_do_action(action)
+    actionMethod = "Can{}".format(action)
+    if candoit == "yes":
+        send_dbus(action)
+    elif candoit in canDoItErrorMessages:
+        raise CanDoItError(
+            "Function {} returned code \"{}\".\n{}".format(actionMethod, candoit,
+                                                           canDoItErrorMessages[candoit]))
+    else:
+        raise CanDoItError(
+            "Function {} returned unexpected reponse \"{}\".".format(actionMethod, candoit))
+
+def send_dbus(method):
+    arguments = ["dbus-send", "--print-reply", "--system", "--dest=org.freedesktop.login1",
+                 "/org/freedesktop/login1", "org.freedesktop.login1.Manager.{}".format(method)]
+    if method[:3] != "Can":
+        arguments.append("boolean:true")
+    response = subprocess.check_output(arguments)
+    return response
+
+def on_error(string):
+    print ("{}".format(string), file = sys.stderr)
+    sys.exit(1)
+
+def openbox_exit():
+    subprocess.check_output(["openbox", "--exit"])
+
+def logout():
+    try:
+        openbox_exit()
+    except subprocess.CalledProcessError as e:
+        on_error(e.output)
+
+def action_from_command_line(action):
+    try:
+        do_action(action)
+    except (subprocess.CalledProcessError, CanDoItError, KeyError) as e:
+        on_error("{}".format(str(e)))
+
+def print_usage(status):
+    print ("{} version {} usage:".format(__me__, __version__),
+           "  -h, --help        show this message and exit",
+           "  -l, --logout      log out from openbox",
+           "  -s, --suspend     suspend the system",
+           "  -i, --hibernate   hibernate the system",
+           "  -y, --hybridsleep hibernate + sleep the system",
+           "  -b, --reboot      reboot the system",
+           "  -p, --poweroff    power the system down", sep='\n', end='\n', file=sys.stderr)
+    sys.exit(status)
+
+def cli_processing(argv):
+    if display:
+        short_options = "hlsyibp"
+        long_options  = ["help","logout","suspend","hybridsleep","hibernate","reboot","poweroff"]
+    else:
+        if len(argv) == 0:
+            print ('Required action is missing.', file=sys.stderr)
+            sys.exit(1)
+        short_options = "hsyibp"
+        long_options  = ["help","suspend","hybridsleep", "hibernate","reboot","poweroff"]
+
+    try:
+        opts, args = getopt.getopt(argv, short_options, long_options)
+    except getopt.GetoptError:
+        print_usage(1)
+
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            print_usage(0)
+        else:
+            if opt in ("-l", "--logout"):
+                logout()
+            else:
+                action_from_command_line(actionToMethod[opt.lstrip('-')])
+            sys.exit(0)
+
+    # no arguments
+    print ("Required arguments missing.", file = sys.stderr)
+    sys.exit(1)
+
+def main(argv):
+    # Make it work from a console too
+    cli_processing(argv)
+
+if __name__ == "__main__":
+    main(['--hibernate'])
+    sys.exit(0)
