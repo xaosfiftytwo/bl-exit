@@ -271,7 +271,7 @@ Probable cause is inadequate swap space.""".format(action)
     response = send_dbus(actionMethod)
     if response:
         lines = response.split("\n")
-        if lines:
+        if lines and lines[1]
             words = lines[1].split("\"")
             if words:
                 if words[1]:

@@ -56,12 +56,12 @@ Probable cause is inadequate swap space.""".format(action)
     if response:
         lines = response.split("\n")
         if lines:
-            words = lines[1].split("\"")
-            if words:
-                if words[1]:
-                    print( "{} returned \"{}\".".format(actionMethod, words[1]))
-                    sys.exit(0)
-                    return words[1]
+            if lines[1]:
+                words = lines[1].split("\"")
+                if words:
+                    if words[1]:
+                        print( "{} returned \"{}\".".format(actionMethod, words[1]))
+                        sys.exit(0)
     sys.exit(1)
 
 def do_action(action):
