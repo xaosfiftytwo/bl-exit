@@ -75,8 +75,16 @@ if display:
             # according to XDG specification and as a fallback use ~/.config/bl-exit
             # Use /etc/bl-exit/bl-exitrc as a last resort
             config_dirs=[]
-            config_dirs.append(os.getenv('XDG_CONFIG_HOME'))
-            config_dirs.append(os.path.expanduser('~/.config'))
+            xdg_config_dir = os.getenv('XDG_CONFIG_HOME')
+            if xdg_config_dir:
+                config_dirs.append(xdg_config_dir)
+            user_config_dir=os.path.expanduser('~/.config')
+            try:
+                if not (xdg_config_dir and os.path.samefile(user_config_dir, xdg_config_dir)):
+                    config_dirs.append(user_config_dir)
+            except OSError as e:
+                print ("{}: {}".format(__me__, str(e)), file = sys.stderr)
+                pass
             config_dirs.append('/etc')
             config_file = None
             for config_dir in config_dirs:
@@ -271,7 +279,7 @@ Probable cause is inadequate swap space.""".format(action)
     response = send_dbus(actionMethod)
     if response:
         lines = response.split("\n")
-        if lines and lines[1]
+        if lines and lines[1]:
             words = lines[1].split("\"")
             if words:
                 if words[1]:
