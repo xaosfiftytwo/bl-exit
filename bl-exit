@@ -3,7 +3,7 @@
 from __future__ import print_function
 
 import os
-display = os.environ.get('DISPLAY') != None
+display = os.environ.get('DISPLAY') is not None
 
 import os
 import getopt
@@ -18,28 +18,22 @@ __version__ = '2.0.0'
 # key = result from _can_do_action
 # value = string shown in error_message_dialog
 canDoItErrorMessages = dict(
-    no         = "Action is not allowed.",
-    na         = "Action is not available.",
-    challenge  = "Action is not authorized."
+    no="Action is not allowed.",
+    na="Action is not available.",
+    challenge="Action is not authorized."
 )
 
 # Translate command-line option to method - command line only
 actionToMethod = dict(
-    logout    = 'Logout',
-    l         = 'Logout',
-    suspend   = 'Suspend',
-    s         = 'Suspend',
-    hybridsleep = 'HybridSleep',
-    y           = 'HybridSleep',
-    hibernate = 'Hibernate',
-    i         = 'Hibernate',
-    reboot    = 'Reboot',
-    b         = 'Reboot',
-    poweroff  = 'PowerOff',
-    p         = 'PowerOff'
+    logout='Logout', l='Logout',
+    suspend='Suspend', s='Suspend',
+    hybridsleep='HybridSleep', y='HybridSleep',
+    hibernate='Hibernate', i='Hibernate',
+    reboot='Reboot', b='Reboot',
+    poweroff='PowerOff', p='PowerOff'
 )
 
-# Custom exception class to test response value returned by can_do_action
+
 class CanDoItError(Exception):
     pass
 
@@ -50,25 +44,28 @@ if display:
     import ConfigParser
 
     class BlExitWindow(gtk.Window):
-        """A dialog offering the user to log out, suspend, reboot or shut down."""
+        """A dialog offering the user to log out, suspend, reboot or shut down.
+        """
 
         def __init__(self):
             gtk.Window.__init__(self)
 
-        def _configure (self):
-            # Determine config dir, first try the environment variable XDG_CONFIG_HOME
-            # according to XDG specification and as a fallback use ~/.config/bl-exit
-            # Use /etc/bl-exit/bl-exitrc as a last resort
-            config_dirs=[]
+        def _configure(self):
+            """Determine config directory: first try the environment variable
+            XDG_CONFIG_HOME according to XDG specification and as a fallback
+            use ~/.config/bl-exit. Use /etc/bl-exit/bl-exitrc as a last
+            resort."""
+            config_dirs = []
             xdg_config_dir = os.getenv('XDG_CONFIG_HOME')
             if xdg_config_dir:
                 config_dirs.append(xdg_config_dir)
-            user_config_dir=os.path.expanduser('~/.config')
+            user_config_dir = os.path.expanduser('~/.config')
             try:
-                if not (xdg_config_dir and os.path.samefile(user_config_dir, xdg_config_dir)):
+                if not (xdg_config_dir and os.path.samefile(user_config_dir,
+                                                            xdg_config_dir)):
                     config_dirs.append(user_config_dir)
             except OSError as e:
-                print ("{}: {}".format(__me__, str(e)), file = sys.stderr)
+                print ("{}: {}".format(__me__, str(e)), file=sys.stderr)
                 pass
             config_dirs.append('/etc')
             config_file = None
@@ -87,7 +84,8 @@ if display:
                 self.config = None
 
         def _construct_ui(self):
-            self.set_title("Log out " + getpass.getuser() + "? Choose an option:")
+            self.set_title("Log out " + getpass.getuser()
+                           + "? Choose an option:")
             self.set_border_width(5)
             self.set_size_request(-1, 80)
             self.set_resizable(False)
@@ -101,7 +99,8 @@ if display:
             # Cancel key (Escape)
             accelgroup = gtk.AccelGroup()
             key, mod = gtk.accelerator_parse('Escape')
-            accelgroup.connect_group(key, mod, gtk.ACCEL_VISIBLE, gtk.main_quit)
+            accelgroup.connect_group(key, mod, gtk.ACCEL_VISIBLE,
+                                     gtk.main_quit)
             self.add_accel_group(accelgroup)
             self._button_box = gtk.HBox()
             self._add_button(1, self._cancel_action, stock=gtk.STOCK_CANCEL)
@@ -122,41 +121,46 @@ if display:
             self.show_all()
 
         def _build_button_visibility_array(self):
-            ''' Determine button visibily using bl-exit configuration file.'''
+            """Determine button visibily using bl-exit configuration file.
+            Build self._bva, an array of tuples, one entry per button,
+            containing (action, label, actionfunction, actionMethod, show,
+            onerror)
+            """
             self._bva = []
-            bva = [ ('logout', '_Log out', self._logout_action),
-                    ('suspend', '_Suspend', self._suspend_action),
-                    ('hibernate', 'H_ibernate', self._hibernate_action),
-                    ('hybridsleep', 'H_ybrid sleep', self._hybridsleep_action),
-                    ('reboot', 'Re_boot', self._reboot_action),
-                    ('poweroff', '_Power off', self._shutdown_action)]
-            # build self._bva, an array of tuples, containing
-            # (action, label, actionfunction, actionMethod, show, onerror)
-            # Values that the 'show' keyword can take in the configuration file
-            show_values = dict(never = 0, always = 1, maybe = 2)
-            # Values that the 'onerror' keyword can take in the configuration file
-            onerror_values = dict ( novisual = 0, visual = 1)
+            bva = [('logout', '_Log out', self._logout_action),
+                   ('suspend', '_Suspend', self._suspend_action),
+                   ('hibernate', 'H_ibernate', self._hibernate_action),
+                   ('hybridsleep', 'H_ybrid sleep', self._hybridsleep_action),
+                   ('reboot', 'Re_boot', self._reboot_action),
+                   ('poweroff', '_Power off', self._shutdown_action)]
+            show_values = dict(never=0, always=1, maybe=2)
+            """Values that the 'show' keyword can take in the configuration
+            file."""
+            onerror_values = dict(novisual=0, visual=1)
+            """Values that the 'onerror' keyword can take in the configuration
+            file."""
             # Per button default settings
-            per_button_defaults = dict (
-                logout = 'always',
-                suspend = 'always',
-                hibernate = 'never',
-                hybridsleep = 'never',
-                reboot = 'always',
-                poweroff = 'always'
+            per_button_defaults = dict(
+                logout='always',
+                suspend='always',
+                hibernate='never',
+                hybridsleep='never',
+                reboot='always',
+                poweroff='always'
             )
             for (action, label, actionfunction) in bva:
                 # Defaults.
                 show = show_values[per_button_defaults[action]]
                 onError = onerror_values['novisual']
                 if self.config:
-                    for section in [ 'default', action ]:
+                    for section in ['default', action]:
                         try:
                             getshow = self.config.get(section, 'show')
                             if getshow in show_values:
                                 show = show_values[getshow]
                                 if show == 2:
-                                    candoit = can_do_action(actionToMethod[action])
+                                    candoit = can_do_action(
+                                        actionToMethod[action])
                                     if not candoit == 'yes':
                                         show = 3
                             else:
@@ -166,7 +170,8 @@ if display:
                         except ConfigParser.NoOptionError as e:
                             pass
                         except subprocess.CalledProcessError as e:
-                            print ("{}: {}".format(__me__, str(e)), file = sys.stderr)
+                            print ("{}: {}".format(__me__, str(e)),
+                                   file=sys.stderr)
                             pass
 
                     try:
@@ -178,8 +183,9 @@ if display:
                     except ConfigParser.NoOptionError as e:
                         pass
 
-                self._bva.append(tuple([action, label, actionfunction, actionToMethod[action],
-                                        show, onError]))
+                self._bva.append(tuple([action, label, actionfunction,
+                                        actionToMethod[action], show,
+                                        onError]))
 
         def main(self):
             self._configure()
@@ -199,7 +205,8 @@ if display:
             self._button_box.pack_start(button)
 
         def _disable_buttons(self):
-            self._button_box.foreach(lambda button: button.set_sensitive(False))
+            self._button_box.foreach(lambda button:
+                                     button.set_sensitive(False))
 
         def _cancel_action(self, button):
             self._disable_buttons()
@@ -207,18 +214,21 @@ if display:
 
         def _get_onerror(self):
             for item in self._bva:
-                (action, label, actionfunction, actionMethod, show, onerror) = item
+                (action, label, actionfunction, actionMethod, show,
+                 onerror) = item
                 if action == self._selected_action:
                     return onerror
 
         def _on_error(self, e):
             onerror = self._get_onerror()
             if onerror == 0:
-                print ("{}: {}".format(__me__, str(e)), file = sys.stderr)
+                print ("{}: {}".format(__me__, str(e)), file=sys.stderr)
                 sys.exit(1)
             else:
-                emDialog = gtk.MessageDialog(parent=None, flags=0, type=gtk.MESSAGE_INFO,
-                                             buttons=gtk.BUTTONS_OK, message_format=None)
+                emDialog = gtk.MessageDialog(parent=None, flags=0,
+                                             type=gtk.MESSAGE_INFO,
+                                             buttons=gtk.BUTTONS_OK,
+                                             message_format=None)
                 if emDialog:
                     emDialog.set_markup("{}".format(e))
                     emDialog.run()
@@ -265,10 +275,11 @@ if display:
                     openbox_exit()
                 else:
                     do_action(action)
-            except (subprocess.CalledProcessError, CanDoItError, KeyError) as e:
+            except BaseException as e:
                 self._on_error(str(e))
             finally:
                 gtk.main_quit()
+
 
 def can_do_action(action):
     # There is no 'CanLogout' method
@@ -287,33 +298,39 @@ Probable cause is inadequate swap space.""".format(action)
                 if words[1]:
                     return words[1]
 
+
 def do_action(action):
     candoit = can_do_action(action)
     actionMethod = "Can{}".format(action)
     if candoit == "yes":
         send_dbus(action)
     elif candoit in canDoItErrorMessages:
-        raise CanDoItError(
-            "Function {} returned code \"{}\".\n{}".format(actionMethod, candoit,
-                                                           canDoItErrorMessages[candoit]))
+        e = "Function {} returned code \"{}\".\n{}"
+        raise CanDoItError(e.format(actionMethod, candoit,
+                                    canDoItErrorMessages[candoit]))
     else:
-        raise CanDoItError(
-            "Function {} returned unexpected reponse \"{}\".".format(actionMethod, candoit))
+        e = "Function {} returned unexpected reponse \"{}\"."
+        raise CanDoItError(e.format(actionMethod, candoit))
+
 
 def send_dbus(method):
-    arguments = ["dbus-send", "--print-reply", "--system", "--dest=org.freedesktop.login1",
-                 "/org/freedesktop/login1", "org.freedesktop.login1.Manager.{}".format(method)]
+    arguments = ["dbus-send", "--print-reply", "--system",
+                 "--dest=org.freedesktop.login1", "/org/freedesktop/login1",
+                 "org.freedesktop.login1.Manager.{}".format(method)]
     if method[:3] != "Can":
         arguments.append("boolean:true")
     response = subprocess.check_output(arguments)
     return response
 
+
 def on_error(string):
-    print ("{}".format(string), file = sys.stderr)
+    print ("{}".format(string), file=sys.stderr)
     sys.exit(1)
 
+
 def openbox_exit():
-    subprocess.check_output(["openbox", "--exit"])
+    subprocess.check_output(["openbox", "--grexit"])
+
 
 def logout():
     try:
@@ -321,11 +338,13 @@ def logout():
     except subprocess.CalledProcessError as e:
         on_error(e.output)
 
+
 def action_from_command_line(action):
     try:
         do_action(action)
     except (subprocess.CalledProcessError, CanDoItError, KeyError) as e:
         on_error("{}".format(str(e)))
+
 
 def print_usage(status):
     print ("bl-exit version {} usage:".format(__version__),
@@ -335,19 +354,23 @@ def print_usage(status):
            "  -i, --hibernate   hibernate the system",
            "  -y, --hybridsleep hibernate + sleep the system",
            "  -b, --reboot      reboot the system",
-           "  -p, --poweroff    power the system down", sep='\n', end='\n', file=sys.stderr)
+           "  -p, --poweroff    power the system down", sep='\n', end='\n',
+           file=sys.stderr)
     sys.exit(status)
+
 
 def cli_processing(argv):
     if display:
         short_options = "hlsyibp"
-        long_options  = ["help","logout","suspend","hybridsleep","hibernate","reboot","poweroff"]
+        long_options = ["help", "logout", "suspend", "hybridsleep",
+                        "hibernate", "reboot", "poweroff"]
     else:
         if len(argv) == 0:
             print ('Required action is missing.', file=sys.stderr)
             sys.exit(1)
         short_options = "hsyibp"
-        long_options  = ["help","suspend","hybridsleep", "hibernate","reboot","poweroff"]
+        long_options = ["help", "suspend", "hybridsleep", "hibernate",
+                        "reboot", "poweroff"]
 
     try:
         opts, args = getopt.getopt(argv, short_options, long_options)
@@ -365,30 +388,36 @@ def cli_processing(argv):
             sys.exit(0)
 
     # no arguments
-    print ("Required arguments missing.", file = sys.stderr)
+    print ("Required arguments missing.", file=sys.stderr)
     sys.exit(1)
+
 
 def graphical_processing():
     BlExitWindow().main()
+
 
 def main(argv):
     '''
     The script works both in a graphical and a non-graphical environment.
 
-    In a graphical environment, the BlExitWindow instance is only shown when the script is launched
-    without arguments. The user selects the action she wants by clicking the right button.
+    In a graphical environment, the BlExitWindow instance is only shown when
+    the script is launched without arguments. The user selects the action she
+    wants by clicking the right button.
 
-    Hen  the script is launched In a graphical environment the requested action should be one of the
-    accepted arguments and the action is executed without asking for confirmation - as if the script
-    was launched from the command line.
+    WHen  the script is launched In a graphical environment the requested
+    action should be one of the accepted arguments and the action is executed
+    without asking for confirmation - as if the script was launched from the
+    command line.
 
-    In a non-graphical environment, one of the accepted actions must be specified as an argument.
+    In a non-graphical environment, one of the accepted actions must be
+    specified as an argument.
     '''
     if display and len(argv) == 0:
         graphical_processing()
     else:
         # Make it work from a console too
         cli_processing(argv)
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
