@@ -329,7 +329,7 @@ def on_error(string):
 
 
 def openbox_exit():
-    subprocess.check_output(["openbox", "--grexit"])
+    subprocess.check_output(["openbox", "--exit"])
 
 
 def logout():
