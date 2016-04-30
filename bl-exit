@@ -80,8 +80,13 @@ if display:
                             config_file = maybe_config_file
                             break
             if config_file:
-                self.config = ConfigParser.RawConfigParser()
-                self.config.read(config_file)
+                try:
+                    self.config = ConfigParser.RawConfigParser()
+                    self.config.read(config_file)
+                except ConfigParser.ParsingError as e:
+                    print ("{}: {}".format(__me__, str(e)), file=sys.stderr)
+                    self.config = None
+                    pass
             else:
                 self.config = None
 
