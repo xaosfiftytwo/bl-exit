@@ -10,6 +10,8 @@ import getopt
 import getpass
 import subprocess
 import sys
+import dbus
+import traceback
 
 __me__ = 'bl-exit'
 __version__ = '2.0.0'
@@ -281,6 +283,17 @@ if display:
                 gtk.main_quit()
 
 
+dbus_iface = None
+
+
+def setup_dbus_connection():
+    global dbus_iface
+    bus = dbus.SystemBus()
+    dbus_object = bus.get_object('org.freedesktop.login1',
+                                 '/org/freedesktop/login1')
+    dbus_iface = dbus.Interface(dbus_object, 'org.freedesktop.login1.Manager')
+
+
 def can_do_action(action):
     # There is no 'CanLogout' method
     if action == "Logout":
@@ -290,13 +303,7 @@ def can_do_action(action):
 Probable cause is inadequate swap space.""".format(action)
     actionMethod = "Can{}".format(action)
     response = send_dbus(actionMethod)
-    if response:
-        lines = response.split("\n")
-        if lines and lines[1]:
-            words = lines[1].split("\"")
-            if words:
-                if words[1]:
-                    return words[1]
+    return str(response)
 
 
 def do_action(action):
@@ -314,13 +321,19 @@ def do_action(action):
 
 
 def send_dbus(method):
-    arguments = ["dbus-send", "--print-reply", "--system",
-                 "--dest=org.freedesktop.login1", "/org/freedesktop/login1",
-                 "org.freedesktop.login1.Manager.{}".format(method)]
-    if method[:3] != "Can":
-        arguments.append("boolean:true")
-    response = subprocess.check_output(arguments)
-    return response
+    global dbus_iface
+    try:
+        if dbus_iface is None:
+            setup_dbus_connection()
+        if method[:3] == "Can":
+            command = "dbus_iface.{}()".format(method)
+        else:
+            command = "dbus_iface.{}(['True'])".format(method)
+        response = eval(command)
+        return str(response)
+    except dbus.DBusException:
+        traceback.print_exc()
+        sys.exit(1)
 
 
 def on_error(string):

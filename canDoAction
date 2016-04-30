@@ -1,25 +1,22 @@
 #!/usr/bin/env python
+#!
+#! ./canDoAction [Hibernate | Suspend | PowerOff ... ]
 
 import sys
 
 import dbus
 
 def main(argv):
-    factory = dbus.SystemBus
 
-    if len(argv) > 2:
-        sys.exit(__doc__)
-    elif len(argv) == 2:
-        if argv[1] == '--session':
-            factory = dbus.SessionBus
-        elif argv[1] != '--system':
-            sys.exit(__doc__)
-
-    bus = factory()
+    bus = dbus.SystemBus()
     dbus_object = bus.get_object('org.freedesktop.login1',
                                  '/org/freedesktop/login1')
     dbus_iface = dbus.Interface(dbus_object, 'org.freedesktop.login1.Manager')
-    dbus_iface.Suspend(['True'])
+    # command = "dbus_iface.Can{}(['True'])".format(argv[1])
+    command = "dbus_iface.Can{}()".format(argv[1])
+    can_do_action = eval(command)
+
+    print (str(can_do_action))
 
 if __name__ == '__main__':
     main(sys.argv)
