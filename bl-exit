@@ -5,13 +5,11 @@ from __future__ import print_function
 import os
 display = os.environ.get('DISPLAY') is not None
 
-import os
+import sys
 import getopt
 import getpass
 import subprocess
-import sys
 import dbus
-import traceback
 
 __me__ = 'bl-exit'
 __version__ = '2.0.0'
@@ -312,17 +310,19 @@ Probable cause is inadequate swap space.""".format(action)
 
 
 def do_action(action):
-    candoit = can_do_action(action)
-    actionMethod = "Can{}".format(action)
-    if candoit == "yes":
-        send_dbus(action)
-    elif candoit in canDoItErrorMessages:
-        e = "Function {} returned code \"{}\".\n{}"
-        raise CanDoItError(e.format(actionMethod, candoit,
-                                    canDoItErrorMessages[candoit]))
-    else:
-        e = "Function {} returned unexpected reponse \"{}\"."
-        raise CanDoItError(e.format(actionMethod, candoit))
+    # candoit = can_do_action(action)
+    # actionMethod = "Can{}".format(action)
+    # if candoit == "yes":
+    #     send_dbus(action)
+    # elif candoit in canDoItErrorMessages:
+    #     e = "Function {} returned code \"{}\".\n{}"
+    #     raise CanDoItError(e.format(actionMethod, candoit,
+    #                                 canDoItErrorMessages[candoit]))
+    # else:
+    #     e = "Function {} returned unexpected reponse \"{}\"."
+    #     raise CanDoItError(e.format(actionMethod, candoit))
+    print("do_action: {}".format(action),file=sys.stderr)
+    send_dbus(action)
 
 
 def send_dbus(method):
@@ -336,9 +336,9 @@ def send_dbus(method):
             command = "dbus_iface.{}(['True'])".format(method)
         response = eval(command)
         return str(response)
-    except dbus.DBusException:
-        traceback.print_exc()
-        sys.exit(1)
+    except dbus.DBusException as e:
+        if display:
+        on_error(str(e))
 
 
 def on_error(string):
