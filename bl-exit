@@ -147,6 +147,9 @@ class BlexitBase(object):
 
 
 if display:
+    """Testing for display here because we want to be able to run the script
+    in a non-graphical environment as well. Importing gtk.Window on the console
+    spits out some errors and crashes the application."""
     import gtk
     import pygtk
     pygtk.require('2.0')
