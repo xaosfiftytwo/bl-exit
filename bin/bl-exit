@@ -99,13 +99,16 @@ class BlexitBase(object):
         try:
             self.do_action(action)
         except (subprocess.CalledProcessError, CanDoItError, KeyError) as e:
-            self.on_error("{}".format(str(e)))
+            self.on_error(str(e))
 
     def print_usage(self, status):
         print ("bl-exit version {} usage:".format(__version__),
-               "  -h, --help        show this message and exit",
-               "  -l, --logout      log out from openbox",
-               "  -s, --suspend     suspend the system",
+               "  -h, --help        show this message and exit", sep='\n',
+               file=sys.stderr)
+        if display:
+            print ("  -l, --logout      log out from openbox", sep='\n',
+                   file=sys.stderr)
+        print ("  -s, --suspend     suspend the system",
                "  -i, --hibernate   hibernate the system",
                "  -y, --hybridsleep hibernate + sleep the system",
                "  -b, --reboot      reboot the system",
@@ -130,21 +133,21 @@ class BlexitBase(object):
         except getopt.GetoptError:
             self.print_usage(1)
 
+        actions = []
         for opt, arg in opts:
-            if opt in ("-h", "--help"):
-                self.print_usage(0)
+            actions.append(opt)
+        # not exactly one argument
+        if not len(actions) == 1:
+            self.on_error("Exactly one argument is required.")
+        if actions[0] in ('-h', '--help'):
+            self.print_usage(0)
+        else:
+            if actions[0] in ("-l", "--logout"):
+                self.logout()
             else:
-                if opt in ("-l", "--logout"):
-                    self.logout()
-                else:
-                    self.setup_dbus_connection()
-                    self.action_from_command_line(
-                        actionToMethod[opt.lstrip('-')])
-                sys.exit(0)
-
-        # no arguments
-        self.on_error("Required argument is missing missing.")
-
+                self.setup_dbus_connection()
+                self.action_from_command_line(
+                    actionToMethod[actions[0].lstrip('-')])
 
 if display:
     """Testing for display here because we want to be able to run the script
