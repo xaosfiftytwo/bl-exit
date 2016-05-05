@@ -25,11 +25,11 @@ show = always
 onerror = novisual
 
 [hibernate]
-show = always
+show = never
 onerror = novisual
 
 [hybridsleep]
-show = always
+show = never
 onerror = novisual
 
 [reboot]

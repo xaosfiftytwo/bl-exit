@@ -40,8 +40,8 @@ class CanDoItError(Exception):
 
 class BlexitBase(object):
 
-    def __init__(self, argv):
-        self.argv = argv
+    def __init__(self):
+        # self.argv = sys.argv[1:]
         self.dbus_iface = None
 
     def setup_dbus_connection(self):
@@ -122,14 +122,14 @@ class BlexitBase(object):
             long_options = ["help", "logout", "suspend", "hybridsleep",
                             "hibernate", "reboot", "poweroff"]
         else:
-            if len(self.argv) == 0:
+            if len(sys.argv[1:]) == 0:
                 self.on_error('Required action is missing.')
             short_options = "hsyibp"
             long_options = ["help", "suspend", "hybridsleep", "hibernate",
                             "reboot", "poweroff"]
 
         try:
-            opts, args = getopt.getopt(self.argv, short_options, long_options)
+            opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
         except getopt.GetoptError:
             self.print_usage(1)
 
@@ -162,8 +162,8 @@ if display:
         """A dialog offering the user to log out, suspend, reboot or shut down.
         """
 
-        def __init__(self, argv):
-            BlexitBase.__init__(self, argv)
+        def __init__(self):
+            BlexitBase.__init__(self)
             gtk.Window.__init__(self)
 
         def configure(self):
@@ -397,7 +397,7 @@ if display:
             gtk.main_quit()
 
 
-def main(argv):
+def main():
     '''
     The script works both in a graphical and a non-graphical environment.
 
@@ -413,13 +413,13 @@ def main(argv):
     In a non-graphical environment, one of the accepted actions must be
     specified as an argument.
     '''
-    if display and len(argv) == 0:
-        blexit = BlexitWindow(argv)
+    if display and len(sys.argv[1:]) == 0:
+        blexit = BlexitWindow()
     else:
-        blexit = BlexitBase(argv)
+        blexit = BlexitBase()
     blexit.main()
 
 if __name__ == "__main__":
-    blexit = None
-    main(sys.argv[1:])
+    # blexit = None
+    main()
     sys.exit(0)
