@@ -102,11 +102,21 @@ class BlexitBase(object):
 
     def main(self):
         opts = get_options()
-        if opts.action == 'logout':
+        if opts.logout:
             self.logout()
         else:
+            if opts.suspend:
+                action = "suspend"
+            elif opts.hibernate:
+                action = "hibernate"
+            elif opts.hybridsleep:
+                action = "hybridsleep"
+            elif opts.reboot:
+                action = "reboot"
+            elif opts.poweroff:
+                action = "poweroff"
             self.setup_dbus_connection()
-            self.action_from_command_line(actionToMethod[opts.action])
+            self.action_from_command_line(actionToMethod[action])
 
 if display:
     """Testing for display here because we want to be able to run the script
@@ -351,14 +361,18 @@ if display:
 def get_options():
     result = None
     import argparse
-    ap = argparse.ArgumentParser(description="Bunsenlabs exit")
-    choices = ['logout', 'suspend', 'hibernate', 'hybridsleep', 'reboot',
-               'poweroff']
-    if not display:
-        choices = choices[1:]
-    ap.add_argument('action', choices=choices)
-    ap.parse_args(sys.argv[1:])
-    result = ap.parse_args()
+    parser = argparse.ArgumentParser(description="Bunsenlabs exit")
+    if display:
+        parser.add_argument("-l", "--logout", help="Log out", action="store_true")
+    parser.add_argument("-s", "--suspend", help="Suspend", action="store_true")
+    parser.add_argument("-i", "--hibernate", help="Hibernate", action="store_true")
+    parser.add_argument("-y", "--hybridsleep", help="Hybrid sleep", action="store_true")
+    parser.add_argument("-b", "--reboot", help="Reboot", action="store_true")
+    parser.add_argument("-p", "--poweroff", help="Power off", action="store_true")
+    parser.parse_args(sys.argv[1:])
+    """No check if more than one option was specified. Take the first option and
+    discard the other"""
+    result = parser.parse_args()
     return result
 
 def main():
