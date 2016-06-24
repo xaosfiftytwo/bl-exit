@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #!
-#! E.G. ./doAction [Suspend | Hibernate | HybridSleep | ...]
+#! E.G. ./doAction [Suspend | Hibernate | HybridSleep | PowerOff ...]
 import sys
 
 import dbus
