@@ -16,18 +16,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+__me__ = 'bl-exit'
+__version__ = '2.0.1'
+
 import os
-import sys
 
-if os.path.isdir(os.path.join(".","src")) and os.path.isfile(
-        os.path.join(".","bl-exit")):
-    sys.path.append(os.path.realpath("src"))
+display = os.environ.get('DISPLAY') is not None
+"""Testing for display here because we want to be able to run the script
+in a non-graphical environment as well. Without the test, importing 
+gtk.Window in a non-graphical environment spits out some errors and crashes
+the application."""
 
-try:
-    from blexit.base import main
-except ImportError:
-    sys.stderr.write("Can't import bl-exit base module\n")
-    sys.exit(1)
-    
-if __name__ == "__main__":
-    sys.exit(main())
+# Translate command-line option to method - command line only
+actionToMethod = dict(
+    cancel='Cancel', c='Cancel',
+    logout='Logout', l='Logout',
+    suspend='Suspend', s='Suspend',
+    hybridsleep='HybridSleep', y='HybridSleep',
+    hibernate='Hibernate', i='Hibernate',
+    reboot='Reboot', b='Reboot',
+    poweroff='PowerOff', p='PowerOff'
+)
